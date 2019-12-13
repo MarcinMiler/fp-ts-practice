@@ -197,3 +197,218 @@ assert.deepStrictEqual(
     O.tryCatch(() => 1),
     O.some(1),
 )
+
+// alt
+
+assert.deepStrictEqual(
+    O.alt(() => O.some('default'))(O.some('some')),
+    O.some('some'),
+)
+
+assert.deepStrictEqual(
+    O.alt(() => O.some('default'))(O.none),
+    O.some('default'),
+)
+
+// ap
+
+assert.deepStrictEqual(
+    P.pipe(
+        O.some((x: number) => x * 2),
+        O.ap(O.some(10)),
+    ),
+    O.some(20),
+)
+
+assert.deepStrictEqual(
+    P.pipe(
+        O.some((x: number) => x * 2),
+        O.ap(O.none),
+    ),
+    O.none,
+)
+
+assert.deepStrictEqual(P.pipe(O.none, O.ap(O.some(10))), O.none)
+
+// apFirst
+
+assert.deepStrictEqual(P.pipe(O.some(1), O.apFirst(O.some(2))), O.some(1))
+
+assert.deepStrictEqual(P.pipe(O.none, O.apFirst(O.some(2))), O.none)
+
+assert.deepStrictEqual(P.pipe(O.none, O.apFirst(O.none)), O.none)
+
+assert.deepStrictEqual(P.pipe(O.some(1), O.apFirst(O.none)), O.none)
+
+// apSecond
+
+assert.deepStrictEqual(P.pipe(O.some(1), O.apSecond(O.some(2))), O.some(2))
+
+assert.deepStrictEqual(P.pipe(O.none, O.apSecond(O.some(2))), O.none)
+
+assert.deepStrictEqual(P.pipe(O.none, O.apSecond(O.none)), O.none)
+
+assert.deepStrictEqual(P.pipe(O.some(1), O.apSecond(O.none)), O.none)
+
+// chain
+
+assert.deepStrictEqual(
+    P.pipe(
+        O.some(0),
+        O.chain(x => (x === 0 ? O.none : O.some(x))),
+    ),
+    O.none,
+)
+
+assert.deepStrictEqual(
+    P.pipe(
+        O.some(2),
+        O.chain(x => (x === 0 ? O.none : O.some(x))),
+    ),
+    O.some(2),
+)
+
+// chainFirst
+
+assert.deepStrictEqual(
+    P.pipe(
+        O.some(0),
+        O.chainFirst(x => (x === 0 ? O.none : O.some(x))),
+    ),
+    O.none,
+)
+
+assert.deepStrictEqual(
+    P.pipe(
+        O.some(2),
+        O.chainFirst(x => (x === 0 ? O.none : O.some(x + 2))),
+    ),
+    O.some(2),
+)
+
+// compact
+
+assert.deepStrictEqual(O.compact(O.some(O.some(1))), O.some(1))
+
+// duplicate
+
+assert.deepStrictEqual(O.duplicate(O.some(1)), O.some(O.some(1)))
+
+// extend
+
+const f = (x: O.Option<number>) =>
+    O.isSome(x) ? (x.value % 2 === 0 ? 'even' : 'odd') : 'none'
+
+assert.deepStrictEqual(P.pipe(O.some(1), O.extend(f)), O.some('odd'))
+assert.deepStrictEqual(P.pipe(O.none, O.extend(f)), O.none)
+
+// filter
+
+assert.deepStrictEqual(
+    P.pipe(
+        O.some(1),
+        O.filter(x => x > 0),
+    ),
+    O.some(1),
+)
+
+assert.deepStrictEqual(
+    P.pipe(
+        O.some(0),
+        O.filter(x => x > 0),
+    ),
+    O.none,
+)
+
+// flatten
+
+assert.deepStrictEqual(O.flatten(O.some(O.none)), O.none)
+assert.deepStrictEqual(O.flatten(O.some(O.some(1))), O.some(1))
+assert.deepStrictEqual(O.flatten(O.some(O.some(O.some(1)))), O.some(O.some(1)))
+
+// foldMap
+
+assert.deepStrictEqual(
+    P.pipe(
+        O.some(2),
+        O.foldMap(monoidSum)(x => x + 2),
+    ),
+    4,
+)
+
+assert.deepStrictEqual(
+    P.pipe(
+        O.none,
+        O.foldMap(monoidSum)(x => x + 2),
+    ),
+    0,
+)
+
+// fromEither
+
+assert.deepStrictEqual(P.pipe(E.right(1), O.fromEither), O.some(1))
+assert.deepStrictEqual(P.pipe(E.left(1), O.fromEither), O.none)
+
+// map
+
+assert.deepStrictEqual(
+    P.pipe(
+        O.some(2),
+        O.map(x => x * 2),
+    ),
+    O.some(4),
+)
+
+assert.deepStrictEqual(
+    P.pipe(
+        O.none,
+        O.map(x => x * 2),
+    ),
+    O.none,
+)
+
+// partition
+
+assert.deepStrictEqual(
+    P.pipe(
+        O.some(1),
+        O.partition(x => x > 0),
+    ),
+    { left: O.none, right: O.some(1) },
+)
+
+assert.deepStrictEqual(
+    P.pipe(
+        O.some(0),
+        O.partition(x => x > 0),
+    ),
+    { left: O.some(0), right: O.none },
+)
+
+// partition map
+
+assert.deepStrictEqual(
+    P.pipe(
+        O.some(1),
+        O.partitionMap(x => (x > 0 ? E.right(x) : E.left('0'))),
+    ),
+    { left: O.none, right: O.some(1) },
+)
+
+assert.deepStrictEqual(
+    P.pipe(
+        O.some(0),
+        O.partitionMap(x => (x > 0 ? E.right(x) : E.left('0'))),
+    ),
+    { left: O.some('0'), right: O.none },
+)
+
+// reduce
+
+assert.deepStrictEqual(
+    P.pipe(
+        O.some(1),
+        O.reduce(0, (x, y) => x + y),
+    ),
+    1,
+)
